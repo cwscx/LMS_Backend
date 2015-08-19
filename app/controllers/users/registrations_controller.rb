@@ -79,7 +79,9 @@ class Users::RegistrationsController < Devise::RegistrationsController
     begin 
       user.save
       respond_to do |format|
-        if user.persisted?   
+        if user.persisted?
+          # !!! How to handle email verification for iOS
+          # if user.user.active_for_authentication?   will return false for verification
           format.json { render json:
             {
               user: user.to_json(),
