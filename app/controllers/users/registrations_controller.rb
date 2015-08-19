@@ -76,7 +76,8 @@ class Users::RegistrationsController < Devise::RegistrationsController
     # When we try to save the user, if it's the mobile phone (self defined attribute) duplication,
     # An exception will be raised. However if it's email which is carried by default, only an error
     # message, but no Excpetion.
-    begin user.save
+    begin 
+      user.save
       respond_to do |format|
         if user.persisted?   
           format.json { render json:

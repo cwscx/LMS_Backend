@@ -29,6 +29,10 @@ gem 'bcrypt', '~> 3.1.7'
 # Use devise to ensure security
 gem 'devise', '~> 3.5.1'
 
+# Test mailer
+# Instruction: In terminal, run mailcatcher; open http://127.0.0.1:1080/;
+gem 'mailcatcher', '~> 0.6.1'
+
 # Use Unicorn as the app server
 # gem 'unicorn'
 

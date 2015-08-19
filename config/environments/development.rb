@@ -41,5 +41,8 @@ Rails.application.configure do
   
   
   # Define the mailer, in production.rb should be changed to hostname
+  # http://stackoverflow.com/questions/8186584/how-do-i-set-up-email-confirmation-with-devise
   config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {:address => "localhost", port: 1025}
 end
