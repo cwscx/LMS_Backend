@@ -1,15 +1,13 @@
 Rails.application.routes.draw do
   
+  get 'home/index'
+
   devise_for :users, controllers: {
-    #confirmations: 'users/confirmations',
+    registrations: 'users/registrations',
     sessions: 'users/sessions'
   }
   
-  devise_scope :user do
-      get "/" => "users/sessions#new"
-  end
-  
-  root to: "users/sessions#new"
+  root to: "home#index"
   
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
