@@ -13,7 +13,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # POST /resource
   def create
     # If the request comes from html, use devise's default create method
-    if(request.format == "text/html")
+    if request.format == "text/html"
       super
     # If the request doesn't come from html, it comes from json
     else
@@ -23,19 +23,39 @@ class Users::RegistrationsController < Devise::RegistrationsController
   end
 
   # GET /resource/edit
-  # def edit
-  #   super
-  # end
+  def edit
+    super
+  end
 
   # PUT /resource
-  # def update
-  #   super
-  # end
+  # For the API, the caller must use this method to update the user's password in side the success login block
+  def update
+    if request.format == "text/html"
+      super
+    else
+      self.resource = resource_class.to_adapter.get!(send(:"current_#{resource_name}").to_key)
+      prev_unconfirmed_email = resource.unconfirmed_email if resource.respond_to?(:unconfirmed_email)
+
+      resource_updated = update_resource(resource, account_update_params)
+      yield resource if block_given?
+      if resource_updated
+        sign_in resource_name, resource, bypass: true
+        respond_to do |format|
+          format.json {render json: {user: resource, message: "Password Updated"}, status: :accepted}
+        end
+      else
+        clean_up_passwords resource
+        respond_to do |format|
+          format.json {render json: {user: resource, message: "Password Update Failure"}, status: :no_content}
+        end
+      end
+    end
+  end
 
   # DELETE /resource
-  # def destroy
-  #   super
-  # end
+  def destroy
+    super
+  end
 
   # GET /resource/cancel
   # Forces the session data which is usually expired after sign
