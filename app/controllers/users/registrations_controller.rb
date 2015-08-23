@@ -1,5 +1,4 @@
 class Users::RegistrationsController < Devise::RegistrationsController
-  
   protect_from_forgery with: :null_session, if: Proc.new { |c| c.request.format == 'application/json' }, on: :create
  
   before_filter :configure_sign_up_params, only: [:create]
@@ -18,8 +17,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
       super
     # If the request doesn't come from html, it comes from json
     else
-      user = User.new(request.params[:user])
-      
+      user = User.new(request.params[:user])    
       save_user(user)
     end
   end
@@ -84,7 +82,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
           # if user.user.active_for_authentication?   will return false for verification
           format.json { render json:
             {
-              user: user.to_json(),
+              user: user,
               reason: ""
             },
             status: 200
