@@ -20,6 +20,10 @@ class Users::SessionsController < Devise::SessionsController
   end
 
   # POST /resource/sign_in
+  # API FORMAT
+  # {
+  #   @"user": { @"email": "xxx@example.com", @"password": @_password_ }
+  # }
   def create
     if request.format == "text/html"
       super

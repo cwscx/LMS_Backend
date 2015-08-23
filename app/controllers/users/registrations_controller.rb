@@ -29,7 +29,17 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   # PUT /resource
   # For the API, the caller must use this method to update the user's password in side the success login block
+  # API FORMAT
+  # {
+  #   @"user": { 
+  #     @"email": "xxx@example.com",
+  #     @"password": @_new_password_
+  #     @"password_confirmation": @_new_password_confirmation_
+  #     @"current_password": @_old_password_
+  #   }
+  # }
   def update
+    puts self.resource = resource_class.to_adapter
     if request.format == "text/html"
       super
     else
@@ -62,9 +72,9 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # in to be expired now. This is useful if the user wants to
   # cancel oauth signing in/up in the middle of the process,
   # removing all OAuth session data.
-  # def cancel
-  #   super
-  # end
+  def cancel
+    super
+  end
 
   # protected
 

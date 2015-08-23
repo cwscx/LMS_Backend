@@ -1,12 +1,34 @@
 class Users::ConfirmationsController < Devise::ConfirmationsController
+  protect_from_forgery with: :null_session, if: Proc.new { |c| c.request.format == 'application/json' }, on: :create
+  
   # GET /resource/confirmation/new
   def new
     super
   end
 
   # POST /resource/confirmation
+  # API FORMAT
+  # {
+  #   @"user": { @"email": "xxx@example.com" }, 
+  #   @"commit": @"Resend confirmation instructions"
+  # }
   def create
-    super
+    if request.format == "text/html"
+      super
+    else
+      self.resource = resource_class.send_confirmation_instructions(resource_params)
+      yield resource if block_given?
+
+      if successfully_sent?(resource)
+        respond_to do |format|
+          format.json {render json: {message: "Confirmation Sent!"}}
+        end
+      else
+        respond_to do |format|
+          format.json {render json: {user: resource, message: resource.errors}}
+        end
+      end
+    end
   end
 
   # GET /resource/confirmation?confirmation_token=abcdef
