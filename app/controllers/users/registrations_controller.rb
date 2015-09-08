@@ -2,7 +2,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
   protect_from_forgery with: :null_session, if: Proc.new { |c| c.request.format == 'application/json' }, on: :create
  
   before_filter :configure_sign_up_params, only: [:create]
-  before_filter :configure_account_update_params, only: [:update]
+  #before_filter :configure_account_update_params, only: [:update]
 
 
   # GET /resource/sign_up
@@ -17,10 +17,44 @@ class Users::RegistrationsController < Devise::RegistrationsController
       super
     # If the request doesn't come from html, it comes from json
     else
-      user = User.new(request.params[:user])    
-      save_user(user)
+      # Check the uniqness of phone_number
+      if !(User.find_by(phone_number: sign_up_params[:phone_number]).nil?)
+        respond_to do |format|
+          format.json {render json: {status: "Phone Number Existed"}, status: 202}
+        end
+      else
+        build_resource(sign_up_params)
+    
+        resource.save    
+        yield resource if block_given?
+    
+        # Check if the email is signed up before
+        if resource.persisted?      
+          # Check if this account is already confirmed. In this case, only the second condition will be called.
+          if resource.active_for_authentication?
+            sign_up(resource_name, resource)
+        
+            respond_to do |format|
+              format.json {render json: {user: resource, status: "Created"}, status: 201}
+            end
+          else 
+            expire_data_after_sign_in!
+        
+            respond_to do |format|
+              format.json {render json: {user: resource, status: "Created"}, status: 201}
+            end
+          end
+        else
+          clean_up_passwords resource
+          set_minimum_password_length
+          respond_to do |format|
+            format.json {render json: {status: "Existed"}, status: 202}
+          end
+        end
+      end
     end
   end
+
 
   # GET /resource/edit
   def edit
@@ -39,7 +73,6 @@ class Users::RegistrationsController < Devise::RegistrationsController
   #   }
   # }
   def update
-    puts self.resource = resource_class.to_adapter
     if request.format == "text/html"
       super
     else
@@ -48,19 +81,21 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
       resource_updated = update_resource(resource, account_update_params)
       yield resource if block_given?
+
       if resource_updated
         sign_in resource_name, resource, bypass: true
         respond_to do |format|
-          format.json {render json: {user: resource, message: "Password Updated"}, status: :accepted}
+          format.json {render json: {user: resource, status: "Password Updated"}, status: :accepted}
         end
       else
         clean_up_passwords resource
         respond_to do |format|
-          format.json {render json: {user: resource, message: "Password Update Failure"}, status: :no_content}
+          format.json {render json: {status: "Password Update Failure"}, status: 202}
         end
       end
     end
   end
+  
 
   # DELETE /resource
   def destroy
@@ -76,7 +111,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     super
   end
 
-  # protected
+  protected
 
   # If you have extra params to permit, append them to the sanitizer.
   def configure_sign_up_params
@@ -85,71 +120,16 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   # If you have extra params to permit, append them to the sanitizer.
   def configure_account_update_params
-    devise_parameter_sanitizer.for(:account_update) << :phone_number
+    devise_parameter_sanitizer.for(:account_update)
   end
 
   # The path used after sign up.
-  # def after_sign_up_path_for(resource)
-  #   super(resource)
-  # end
+  def after_sign_up_path_for(resource)
+    super(resource)
+  end
 
   # The path used after sign up for inactive accounts.
-  # def after_inactive_sign_up_path_for(resource)
-  #   super(resource)
-  # end
-  
-  private
-  
-  def save_user(user)
-    # When we try to save the user, if it's the mobile phone (self defined attribute) duplication,
-    # An exception will be raised. However if it's email which is carried by default, only an error
-    # message, but no Excpetion.
-    begin 
-      user.save
-      respond_to do |format|
-        if user.persisted?
-          # !!! How to handle email verification for iOS
-          # if user.user.active_for_authentication?   will return false for verification
-          format.json { render json:
-            {
-              user: user,
-              reason: ""
-            },
-            status: 200
-          }
-        else
-          format.json { render json:
-            {
-              error: user.errors,
-              reason: "Email Existed"
-            },
-            status: 202
-          }
-        end
-      end
-    rescue Exception => e
-      # If the Exception is the duplication of mobile_phone
-      if e.class == ActiveRecord::RecordNotUnique
-        respond_to do |format|
-          format.json { render json:
-            {
-              error: {:mobile_phone => ["has already been taken"]},
-              reason: "Mobile Phone Existed"
-            },
-            status: 202
-          }
-        end
-      else
-        respond_to do |format|
-          format.json {render json:
-            {
-              error: e.message,
-              reason: "Unknown Error"
-            },
-            status: 400
-          }
-        end
-      end
-    end
+  def after_inactive_sign_up_path_for(resource)
+    super(resource)
   end
 end

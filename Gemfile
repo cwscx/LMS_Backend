@@ -27,7 +27,7 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 gem 'bcrypt', '~> 3.1.7'
 
 # Use devise to ensure security
-gem 'devise', '~> 3.5.1'
+gem 'devise', '~> 3.5.2'
 
 # Test mailer
 # Instruction: In terminal, run mailcatcher; open http://127.0.0.1:1080/;

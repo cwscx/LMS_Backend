@@ -14,7 +14,7 @@ class Users::SessionsController < Devise::SessionsController
       yield resource if block_given?
       
       respond_to do |format|
-        format.json {render json: {user: resource, methods: serialize_options(resource)}}
+        format.json {render json: {status: "Login Failure"}, status: 202}
       end
     end
   end
@@ -28,12 +28,15 @@ class Users::SessionsController < Devise::SessionsController
     if request.format == "text/html"
       super
     else
+      self.resource = resource_class.new(sign_in_params)
+      clean_up_passwords(resource)
+      
       self.resource = warden.authenticate!(auth_options)
       sign_in(resource_name, resource)
       yield resource if block_given?
       
       respond_to do |format|
-        format.json {render json: {user: resource}, status: 200}
+        format.json {render json: {user: resource, status: "Login Success"}, status: 200}
       end
     end
   end
